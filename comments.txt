@@ -1,0 +1,272 @@
+
+# if __name__ ==  "__main__":
+#     uvicorn.run("app:app", port=8080, reload=True)
+
+# from itertools import cycle
+
+# @app.post("/get_annotated_image_base_64")
+# async def get_annotated_image64(request: RequestModelUpdatedGrade):
+#     images_base64 = []
+
+#     # Iterate through the updated papers
+#     for idx, image_data in enumerate(request.updated_papers):
+#         original_url = image_data['original_url']
+#         image_size = image_data["original_size"]
+#         total_score = image_data["Question_pair"]["student_info"]["total_score"]
+#         tests = image_data["Question_pair"]["tests"]
+        
+#         # Flatten question_answer_pairs from all tests
+#         answer_pairs = [
+#             pair for test in tests for pair in test["question_answer_pairs"]
+#         ]
+#         # Create an iterator for question-answer pairs
+#         answer_iterator = cycle(answer_pairs)
+        
+#         # Create an iterator for the tests (for fetching points)
+#         test_iterator = iter(tests)
+
+#         # Fetch the image
+#         response = requests.get(original_url)
+#         img = Image.open(BytesIO(response.content))
+#         draw = ImageDraw.Draw(img)
+#         font_default = ImageFont.load_default()
+#         font = ImageFont.truetype("JetBrainsMono-Medium.ttf", size=40)
+        
+#         # Loop through full_data and draw annotations on the image
+#         for annotation in image_data["full_data"]:
+#             box = annotation['box']
+#             text = annotation['text']
+            
+#             # Get the corresponding answer information
+#             try:
+#                 answer_info = next(answer_iterator)
+#                 is_correct = answer_info.get("is_correct", False)
+#             except StopIteration:
+#                 is_correct = False
+
+#             # Determine bounding box color
+#             box_color = "green" if is_correct else "red"
+
+#             # Draw the bounding box
+#             draw.rectangle(box, outline=box_color, width=2)
+            
+#             # Draw the text
+#             draw.text((box[0], box[1] - 10), text, fill=box_color, font=font_default)
+
+#             # Draw the total score if "SCORE:" or "SCORE" is in the text
+#             if "SCORE:" in text or "SCORE" in text:
+#                 score = str(int(total_score))
+#                 score_position = (box[2] + image_size[0] // 15, box[1] - 10)
+#                 draw.text(score_position, score, fill="blue", font=font)
+
+#             # Draw the test score if "pts." is in the text
+#             if "pts." in text:
+#                 try:
+#                     # Get the current test score and draw it
+#                     test = next(test_iterator)
+#                     pts_score = str(int(test['correct_points']))
+#                     pts_position = (box[2] + image_size[0] // 8, box[1] - 10)
+#                     draw.text(pts_position, pts_score, fill="blue", font=font)
+#                 except StopIteration:
+#                     break
+
+#         # Convert annotated image to base64
+#         buffered = BytesIO()
+#         #img.save(buffered, format="JPEG")
+#         images_base64.append(base64.b64encode(buffered.getvalue()).decode("utf-8"))
+#         img.show()
+#     return {"images": images_base64}
+
+# @app.post("/get_annotated_image_base_64")
+# async def get_annotated_image64(request: RequestModelUpdatedGrade):
+#     images_base64 = []
+#     font = ImageFont.truetype("JetBrainsMono-Medium.ttf", size=40)
+#     fontAnnot = ImageFont.truetype("FiraCodeNerdFontMono-Bold.ttf", size=24)
+#     # Iterate through the updated papers
+#     for idx, image_data in enumerate(request.updated_papers):
+#         original_url = image_data['original_url']
+#         image_size = image_data["original_size"]
+#         total_score = image_data["Question_pair"]["student_info"]["total_score"]
+#         tests = image_data["Question_pair"]["tests"]
+        
+#         # Create an iterator for test scores
+#         test_iterator = iter(tests)
+        
+#         # Fetch the image
+#         response = requests.get(original_url)
+#         img = Image.open(BytesIO(response.content))
+#         draw = ImageDraw.Draw(img)
+#         font_default = ImageFont.load_default()
+        
+#         for test in tests:
+#             for pair in test["question_answer_pairs"]:
+#                 if pair["is_correct"]:
+#                     draw.rectangle(pair["annotation"], outline="blue", width= 3)
+#                 else: 
+#                     draw.rectangle(pair["annotation"], outline="red", width=3)
+#         # Loop through full_data and draw annotations on the image
+#         for annotation in image_data["full_data"]:
+#             box = annotation['box']
+#             text = annotation['text']
+            
+#             # Draw the bounding box (in red color and line width of 2)
+#             draw.rectangle(box, outline=(0, 105, 0), width=2)
+            
+#             # Draw the text (in red color, just above the box)
+#             draw.text((box[0]+10, box[1] - 20), text, fill=(139, 0, 0), font=fontAnnot)
+
+#             # Draw the total score if "SCORE:" or "SCORE" is in the text
+#             if "SCORE:" in text or "SCORE" in text:
+#                 score = str(int(total_score))
+#                 score_position = (box[2] + image_size[0] // 15, box[1] - 30)
+#                 draw.text(score_position, score, fill="blue", font=font)
+
+#             # Draw the test score if "pts." is in the text
+#             if "pts." in text:
+#                 try:
+#                     # Fetch the next test value from the iterator
+#                     test = next(test_iterator)
+#                     pts_score = str(int(test['correct_points']))
+#                     pts_position = (box[2] + image_size[0] // 8, box[1] - 30)
+#                     draw.text(pts_position, pts_score, fill="blue", font=font)
+#                 except StopIteration:
+#                     # If no more tests are available, break out
+#                     break
+
+#         # Convert annotated image to base64
+#         buffered = BytesIO()
+#         img.save(buffered, format="JPEG")
+#         images_base64.append(base64.b64encode(buffered.getvalue()).decode("utf-8"))
+#        # img.show()
+#     return {"images": images_base64}
+
+# @app.post("/get_annotated_image")
+# async def get_annotated_image(request: RequestModelUpdatedGrade):
+#     # Iterate through the updated papers
+#     for idx, image_data in enumerate(request.updated_papers):
+#         original_url = image_data['original_url']
+#         image_size = image_data["original_size"]
+#         total_score = image_data["Question_pair"]["student_info"]["total_score"]
+#         tests = image_data["Question_pair"]["tests"]
+        
+#         # Create an iterator for test scores
+#         test_iterator = iter(tests)
+#         # Fetch the image
+#         response = requests.get(original_url)
+#         img = Image.open(BytesIO(response.content))
+#         draw = ImageDraw.Draw(img)
+#         font_default = ImageFont.load_default()
+#         font = ImageFont.truetype("JetBrainsMono-Medium.ttf", size=40)
+
+#         # Loop through full_data and draw annotations on the image
+#         for annotation in image_data["full_data"]:
+#             box = annotation['box']
+#             text = annotation['text']
+            
+#             # Draw the bounding box (in red color and line width of 2)
+#             draw.rectangle(box, outline="red", width=2)
+            
+#             # Draw the text (in red color, just above the box)
+#             draw.text((box[0], box[1] - 10), text, fill="red", font=font_default)
+
+#             if "SCORE:" in text or "SCORE" in text:
+#                 # Define the score (replace with the actual logic for the score)
+#                 score = total_score  # Replace with actual score logic
+#                 score_position = (box[2] + image_size[0]//15, box[1] - 10)
+#                 draw.text(score_position, score, fill="blue", font=font)
+
+#             if "pts." in text:
+#                 try:
+#                     # Fetch the next test value from the iterator
+#                     test = next(test_iterator)
+#                     pts_score = str(int(test['correct_points']))
+#                     pts_position = (box[2] + image_size[0] // 8, box[1] - 10)
+#                     draw.text(pts_position, pts_score, fill="blue", font=font)
+#                 except StopIteration:
+#                     # If no more tests are available, break out
+#                     break
+
+#         # Resize the image to fit within the maximum allowed size
+#         max_width = 300 * 5
+#         max_height = 200 * 5
+#         img.thumbnail((max_width, max_height))
+
+#         # Convert the image to a byte array
+#         img_byte_arr = io.BytesIO()
+#         img.save(img_byte_arr, format="PNG")
+#         img_byte_arr.seek(0)
+
+#         # Return the annotated image as a streaming response
+#         return StreamingResponse(img_byte_arr, media_type="image/png")
+
+    # Add annotations and scores directly to the DataFrame
+    # annotations_data = []
+    # for idx, paper in enumerate(request.updated_papers):
+    #     original_url = paper["original_url"]
+    #     total_score = paper["Question_pair"]["student_info"]["total_score"]
+    #     tests = paper["Question_pair"]["tests"]
+    #     test_iterator = iter(tests)
+        
+    #     # Extract annotation details
+    #     for annotation in paper["full_data"]:
+    #         box = annotation["box"]
+    #         text = annotation["text"]
+
+    #         # For each annotation, add data into a row in the annotations list
+    #         row_data = {
+    #             "Paper Index": idx + 1,
+    #             "Original URL": original_url,
+    #             "Box Coordinates": box,
+    #             "Annotation Text": text,
+    #             "Total Score": total_score,
+    #         }
+
+    #         # If the annotation includes scores or points, process accordingly
+    #         if "SCORE:" in text or "SCORE" in text:
+    #             row_data["Score"] = int(total_score)  # Replace with actual logic if needed
+            
+    #         if "pts." in text:
+    #             try:
+    #                 # Fetch the next test value
+    #                 test = next(test_iterator)
+    #                 row_data["Points"] = int(test["correct_points"])
+    #             except StopIteration:
+    #                 # No more tests available
+    #                 row_data["Points"] = None
+
+    #         annotations_data.append(row_data)
+
+
+    # Helper function to flatten the data and convert it to a DataFrame
+# def convert_to_dataframe(updated_papers):
+#     data = []
+    
+#     for paper in updated_papers:
+#         question_pair = paper["Question_pair"]
+#         student_info = question_pair["student_info"]
+        
+#         for test in question_pair["tests"]:
+#             test_number = test["test_number"]
+#             test_type = test["test_type"]
+#             total_points = test["total_points"]
+#             correct_points = test["correct_points"]
+            
+#             for qa_pair in test["question_answer_pairs"]:
+#                 data.append({
+#                     "student_name": student_info["name"],
+#                     "university": student_info["university"],
+#                     "college": student_info["college"],
+#                     "department": student_info["department"],
+#                     "exam_type": student_info["exam_type"],
+#                     "subject_code": student_info["subject_code"],
+#                     "subject_name": student_info["subject_name"],
+#                     "test_number": test_number,
+#                     "test_type": test_type,
+#                     "question_number": qa_pair["question_number"],
+#                     "answer": qa_pair["answer"],
+#                     "total_points": total_points,
+#                     "correct_points": correct_points
+#                 })
+    
+#     df = pd.DataFrame(data)
+#     return df
